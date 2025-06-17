@@ -1,0 +1,16 @@
+name: CraftedGear
+version: '1.0-SNAPSHOT'
+main: dev.o8o1o5.craftedGear.CraftedGear
+api-version: '1.21'
+authors: [o8o1o5]
+description: A custom item engine for Minecraft servers.
+softdepend: [NBTAPI, PlaceholderAPI]
+commands:
+  cg:
+    description: CraftedGear commands.
+    usage: /<command>
+    permission: craftedgear.command.admin
+permissions:
+  craftedgear.command.admin:
+    description: Allows admin commands for CraftedGear.
+    default: op
