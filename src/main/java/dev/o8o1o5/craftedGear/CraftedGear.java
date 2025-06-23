@@ -22,7 +22,7 @@ public final class CraftedGear extends JavaPlugin {
     private String resourcePackUrl;
     private byte[] resourcePackHashBytes; // 리소스팩 SHA-1 해시 (바이트 배열)
     private String messagePrefix;
-    private ChatColor defaultLoreColor;
+    private String defaultLoreColor;
     private boolean debugMode;
 
     /**
@@ -42,7 +42,6 @@ public final class CraftedGear extends JavaPlugin {
         itemManager = new ItemManager(this);
         itemManager.loadItems(); // 커스텀 아이템 로드
 
-        getCommand("craftedgear").setExecutor(new CraftedGearCommand(this));
         getCommand("cg").setExecutor(new CraftedGearCommand(this));
 
         // 리소스팩 적용을 위한 리스너 등록 (플레이어 접속 시 리소스팩 요청)
@@ -87,7 +86,7 @@ public final class CraftedGear extends JavaPlugin {
         this.messagePrefix = ChatColor.translateAlternateColorCodes('&', getConfig().getString("message_prefix", "&8[&aCraftedGear&8] &r"));
         String loreColorCode = getConfig().getString("default_item_lore_color", "&7");
         // ChatColor.valueOf()는 enum 이름을 기대하므로, translateAlternateColorCodes 결과의 name()을 사용
-        this.defaultLoreColor = ChatColor.valueOf(ChatColor.translateAlternateColorCodes('&', loreColorCode));
+        this.defaultLoreColor = ChatColor.translateAlternateColorCodes('&', loreColorCode);
 
         if (debugMode) {
             getLogger().info("디버그 모드 활성화됨.");
@@ -146,7 +145,7 @@ public final class CraftedGear extends JavaPlugin {
      * 기본 로어 색상을 반환합니다.
      * @return 기본 로어 색상 ChatColor
      */
-    public ChatColor getDefaultLoreColor() {
+    public String getDefaultLoreColor() {
         return defaultLoreColor;
     }
 

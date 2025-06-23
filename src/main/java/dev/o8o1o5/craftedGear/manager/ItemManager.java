@@ -160,7 +160,7 @@ public class ItemManager {
 
         // 3. Custom Model Data 설정
         CustomModelDataComponent customModelDataComponent = meta.getCustomModelDataComponent();
-        customModelDataComponent.getStrings().add(itemData.getId());
+        customModelDataComponent.setStrings(List.of(itemData.getId()));
         meta.setCustomModelDataComponent(customModelDataComponent);
 
         // 4. 파괴 불가 설정

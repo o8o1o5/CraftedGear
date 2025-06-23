@@ -11,6 +11,7 @@ commands:
     usage: /<command>
     permission: craftedgear.command.admin
     permission-message: You do not have permission to use this command.
+    aliases: [craftedgear]
 
 permissions:
   craftedgear.command.admin:
