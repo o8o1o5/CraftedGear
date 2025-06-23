@@ -15,9 +15,11 @@ import java.util.Set; // keySet() 사용을 위해
 import java.util.logging.Level;
 
 // 아이템 스택 생성을 위한 추가 임포트
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.NamespacedKey;                   // PDC에 사용할 NamespacedKey 임포트
+import org.bukkit.inventory.meta.components.CustomModelDataComponent;
 import org.bukkit.persistence.PersistentDataContainer; // PDC 임포트
 import org.bukkit.persistence.PersistentDataType;    // PDC 데이터 타입 임포트
 import net.md_5.bungee.api.ChatColor;              // 색상 코드 변환을 위해
@@ -66,7 +68,6 @@ public class ItemManager {
                 // YAML 파일에서 필수 속성 추출 및 유효성 검사
                 String id = config.getString("id");
                 String materialName = config.getString("material");
-                int customModelData = config.getInt("custom_model_data", -1); // 기본값 -1 (유효하지 않은 값)
 
                 if (id == null || id.isEmpty()) {
                     plugin.getLogger().warning(plugin.getMessagePrefix() + "파일 " + file.getName() + "에서 'id'를 찾을 수 없거나 비어 있습니다. 이 아이템은 건너뜁니다.");
@@ -84,13 +85,8 @@ public class ItemManager {
                     continue;
                 }
 
-                if (customModelData < 0) {
-                    plugin.getLogger().warning(plugin.getMessagePrefix() + "파일 " + file.getName() + "에서 'custom_model_data'가 유효하지 않습니다 (0 이상이어야 합니다). 이 아이템은 건너뜁니다.");
-                    continue;
-                }
-
                 // CustomItemData 객체 생성
-                CustomItemData itemData = new CustomItemData(id, material, customModelData);
+                CustomItemData itemData = new CustomItemData(id, material);
 
                 // 선택적 속성 설정
                 itemData.setDisplayName(config.getString("display_name"));
@@ -116,7 +112,7 @@ public class ItemManager {
      * @param id 조회할 아이템의 고유 ID
      * @return 해당 CustomItemData 객체, 없으면 null
      */
-    public CustomItemData get(String id) {
+    public CustomItemData getCustomData(String id) {
         return loadedItems.get(id);
     }
 
@@ -135,7 +131,7 @@ public class ItemManager {
      * @param itemData 생성할 커스텀 아이템 데이터
      * @return 생성된 커스텀 아이템 ItemStack
      */
-    public ItemStack create(CustomItemData itemData) {
+    public ItemStack createItem(CustomItemData itemData) {
         if (itemData == null) {
             plugin.getLogger().warning(plugin.getMessagePrefix() + "생성할 CustomItemData가 null입니다.");
             return null;
@@ -149,28 +145,31 @@ public class ItemManager {
             return null;
         }
 
-        // 1. 표시 이름 설정
+        // 1. 표시 이름 설정 (기본적으로 흰색)
         if (itemData.getDisplayName() != null && !itemData.getDisplayName().isEmpty()) {
-            meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', itemData.getDisplayName()));
+            meta.setDisplayName(ChatColor.WHITE + itemData.getDisplayName());
         }
 
         // 2. 로어(Lore) 설정
         if (itemData.getLore() != null && !itemData.getLore().isEmpty()) {
             List<String> translatedLore = itemData.getLore().stream()
-                    .map(line -> ChatColor.translateAlternateColorCodes('&', line))
+                    .map(line -> plugin.getDefaultLoreColor() + line)
                     .collect(Collectors.toList());
             meta.setLore(translatedLore);
         }
 
         // 3. Custom Model Data 설정
-        meta.setCustomModelData(itemData.getCustomModelData());
+        CustomModelDataComponent customModelDataComponent = meta.getCustomModelDataComponent();
+        customModelDataComponent.getStrings().add(itemData.getId());
+        meta.setCustomModelDataComponent(customModelDataComponent);
 
         // 4. 파괴 불가 설정
         meta.setUnbreakable(itemData.isUnbreakable());
 
         // 5. 발광 효과 설정 (인챈트 숨김 ItemFlag 사용)
         if (itemData.isGlowing()) {
-            meta.addItemFlags(org.bukkit.inventory.ItemFlag.HIDE_ENCHANTS);
+            // meta.addEnchant();
+            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
         }
 
         // --- 핵심: Persistent Data Container (PDC)에 고유 ID 저장 ---

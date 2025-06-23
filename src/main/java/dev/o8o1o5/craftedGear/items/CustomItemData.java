@@ -13,7 +13,6 @@ public class CustomItemData {
     // 필수 속성
     private final String id; // 플러그인 내에서 아이템을 식별하는 고유 ID (예: legendary_sword_01)
     private final Material material; // 아이템의 기반이 되는 바닐라 마인크래프트 Material (예: DIAMOND_SWORD)
-    private final int customModelData; // 리소스팩에서 해당 아이템의 모델을 참조할 int 값 (예: 1001)
 
     // 선택적 속성 (null 또는 기본값 가능)
     private String displayName; // 아이템의 표시 이름 (색상 코드 지원)
@@ -25,13 +24,11 @@ public class CustomItemData {
      * CustomItemData 객체의 생성자입니다.
      * @param id 아이템의 고유 ID
      * @param material 아이템의 기반 Material
-     * @param customModelData 아이템의 Custom Model Data 값
      */
-    public CustomItemData(String id, Material material, int customModelData) {
+    public CustomItemData(String id, Material material) {
         // 필수 속성은 null이 될 수 없도록 검증합니다.
         this.id = Objects.requireNonNull(id, "Item ID cannot be null.");
         this.material = Objects.requireNonNull(material, "Item Material cannot be null.");
-        this.customModelData = customModelData;
     }
 
     // --- Getter 메서드 ---
@@ -41,10 +38,6 @@ public class CustomItemData {
 
     public Material getMaterial() {
         return material;
-    }
-
-    public int getCustomModelData() {
-        return customModelData;
     }
 
     public String getDisplayName() {
@@ -86,7 +79,7 @@ public class CustomItemData {
         return "CustomItemData{" +
                 "id='" + id + '\'' +
                 ", material=" + material +
-                ", customModelData=" + customModelData +
+                ", customModelData=" + id +
                 ", displayName='" + displayName + '\'' +
                 ", lore=" + lore +
                 ", unbreakable=" + unbreakable +
