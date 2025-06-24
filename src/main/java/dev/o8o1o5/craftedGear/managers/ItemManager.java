@@ -1,13 +1,12 @@
-package dev.o8o1o5.craftedGear.manager;
+package dev.o8o1o5.craftedGear.managers;
 
 import dev.o8o1o5.craftedGear.CraftedGear; // 메인 플러그인 임포트
-import dev.o8o1o5.craftedGear.items.CustomItemData; // CustomItemData 클래스 임포트
 
+import dev.o8o1o5.craftedGear.items.CustomItemData;
 import org.bukkit.Material; // Bukkit Material 임포트
 import org.bukkit.configuration.file.YamlConfiguration; // YAML 파일 파싱을 위해
 
 import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

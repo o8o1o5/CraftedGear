@@ -21,19 +21,6 @@ public class ResourcePackListener implements Listener {
         Player player = event.getPlayer();
 
         // CraftedGear 메인 클래스에서 설정된 리소스팩 정보를 가져옵니다.
-        String resourcePackUrl = plugin.getResourcePackUrl();
-        byte[] resourcePackHashBytes = plugin.getResourcePackHashBytes();
 
-        // 리소스팩 설정이 유효한지 확인합니다.
-        if (plugin.isResourcePackConfigured()) {
-            player.setResourcePack(resourcePackUrl, resourcePackHashBytes,
-                    "CraftedGear 커스텀 아이템을 위한 리소스팩을 다운로드 중...", false);
-
-            if (plugin.isDebugMode()) {
-                plugin.getLogger().info(plugin.getMessagePrefix() + player.getName() + " 에게 리소스팩 요청을 보냈습니다.");
-            }
-        } else if (plugin.isDebugMode()) {
-            plugin.getLogger().warning(plugin.getMessagePrefix() + player.getName() + " 에게 보낼 유효한 리소스팩 URL 또는 해시가 없습니다.");
-        }
     }
 }

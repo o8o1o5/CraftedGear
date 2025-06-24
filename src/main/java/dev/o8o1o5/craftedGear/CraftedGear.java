@@ -1,14 +1,11 @@
 package dev.o8o1o5.craftedGear;
 
 import dev.o8o1o5.craftedGear.commands.CraftedGearCommand;
-import dev.o8o1o5.craftedGear.manager.ItemManager;
+import dev.o8o1o5.craftedGear.managers.ItemManager;
 import dev.o8o1o5.craftedGear.listeners.ResourcePackListener;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.plugin.java.JavaPlugin;
-
-import java.util.logging.Level;
-import java.util.Base64; // SHA-1 해시 변환에 사용 (Java 9+ 권장)
 // import javax.xml.bind.DatatypeConverter; // Java 8 또는 필요 시 사용 (의존성 추가 필요)
 
 /**
@@ -19,8 +16,6 @@ public final class CraftedGear extends JavaPlugin {
 
     private static CraftedGear plugin;
     private ItemManager itemManager;
-    private String resourcePackUrl;
-    private byte[] resourcePackHashBytes; // 리소스팩 SHA-1 해시 (바이트 배열)
     private String messagePrefix;
     private String defaultLoreColor;
     private boolean debugMode;
@@ -67,21 +62,6 @@ public final class CraftedGear extends JavaPlugin {
      */
     private void loadConfigSettings() {
         this.debugMode = getConfig().getBoolean("debug_mode", false);
-        this.resourcePackUrl = getConfig().getString("resource_pack_url", "");
-        String resourcePackHashString = getConfig().getString("resource_pack_hash", "");
-
-        if (!resourcePackHashString.isEmpty()) {
-            try {
-                // SHA-1 해시 16진수 문자열을 byte[]로 변환
-                this.resourcePackHashBytes = hexStringToByteArray(resourcePackHashString);
-                // 혹은, javax.xml.bind.DatatypeConverter.parseHexBinary(resourcePackHashString); 사용 가능
-            } catch (IllegalArgumentException e) {
-                getLogger().log(Level.SEVERE, "리소스팩 해시 값이 올바른 16진수 문자열이 아닙니다: " + resourcePackHashString, e);
-                this.resourcePackHashBytes = null; // 오류 발생 시 리소스팩 적용 시도 방지
-            }
-        } else {
-            this.resourcePackHashBytes = null; // 해시 값이 없으면 null
-        }
 
         this.messagePrefix = ChatColor.translateAlternateColorCodes('&', getConfig().getString("message_prefix", "&8[&aCraftedGear&8] &r"));
         String loreColorCode = getConfig().getString("default_item_lore_color", "&7");
@@ -90,11 +70,6 @@ public final class CraftedGear extends JavaPlugin {
 
         if (debugMode) {
             getLogger().info("디버그 모드 활성화됨.");
-            getLogger().info("리소스팩 URL: " + resourcePackUrl);
-            getLogger().info("리소스팩 해시 (문자열): " + resourcePackHashString);
-            if (resourcePackHashBytes != null) {
-                getLogger().info("리소스팩 해시 (바이트): " + Base64.getEncoder().encodeToString(resourcePackHashBytes));
-            }
         }
     }
 
@@ -155,29 +130,5 @@ public final class CraftedGear extends JavaPlugin {
      */
     public boolean isDebugMode() {
         return debugMode;
-    }
-
-    /**
-     * 설정된 리소스팩 URL을 반환합니다.
-     * @return 리소스팩 URL 문자열
-     */
-    public String getResourcePackUrl() {
-        return resourcePackUrl;
-    }
-
-    /**
-     * 변환된 리소스팩 SHA-1 해시(byte[])를 반환합니다.
-     * @return 리소스팩 SHA-1 해시 byte[]
-     */
-    public byte[] getResourcePackHashBytes() {
-        return resourcePackHashBytes;
-    }
-
-    /**
-     * 리소스팩 URL과 해시가 유효하게 설정되었는지 확인합니다.
-     * @return 리소스팩 설정 유효성 여부
-     */
-    public boolean isResourcePackConfigured() {
-        return !resourcePackUrl.isEmpty() && resourcePackHashBytes != null;
     }
 }
