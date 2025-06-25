@@ -2,6 +2,7 @@ package dev.o8o1o5.craftedGear.generators;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import dev.o8o1o5.craftedGear.items.CustomItemData;
 import dev.o8o1o5.craftedGear.managers.ItemManager;
@@ -13,9 +14,13 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 public class ResourcePackGenerator {
 
@@ -52,17 +57,19 @@ public class ResourcePackGenerator {
             plugin.getLogger().warning("텍스처 파일을 여기에 넣어주세요! (예: crafted_gear.png)");
         }
 
-        File minecraftItemFolder = new File(buildFolder, "assets/minecraft/items");
+        File minecraftItemFolder = new File(buildFolder, "assets/minecraft/items"); // <--- 문제의 줄
         minecraftItemFolder.mkdirs();
+
         File commonModelTargetFolder = new File(buildFolder, "assets/minecraft/models/item");
         commonModelTargetFolder.mkdirs();
+
         File commonTextureTargetFolder = new File(buildFolder, "assets/minecraft/textures/item");
         commonTextureTargetFolder.mkdirs();
 
         createPackMcMeta(buildFolder);
         plugin.getLogger().info("pack.mcmeta 생성 중...");
 
-        copyCustomTextures(buildFolder)
+        copyCustomTextures(buildFolder);
         plugin.getLogger().info("텍스쳐 파일 불러오기...");
 
         plugin.getLogger().info("커스텀 모델 JSON 생성 중...");
@@ -72,6 +79,8 @@ public class ResourcePackGenerator {
                     new File(commonModelTargetFolder, itemData.getId().toLowerCase() + ".json"),
                     "item/" + itemData.getId().toLowerCase()
             );
+            itemsByMaterial.computeIfAbsent(itemData.getMaterial(), k -> new ArrayList<>()).add(itemData);
+            plugin.getLogger().info("커스텀 모델 JSON 파일 생성: " + itemData.getId().toLowerCase() + ".json");
         }
 
         plugin.getLogger().info("Material 모델 오버라이드 생성 중...");
@@ -80,7 +89,7 @@ public class ResourcePackGenerator {
             List<CustomItemData> itemsForMaterial = entry.getValue();
 
             File materialModelFile = new File(minecraftItemFolder, material.name().toLowerCase() + ".json");
-            createSelectModelJson(materialModelFile, material, itemsForMaterial);
+            createMaterialSelectModelJson(materialModelFile, material, itemsForMaterial);
         }
 
         zipFolder(buildFolder, outputZipFile);
@@ -143,20 +152,82 @@ public class ResourcePackGenerator {
         }
     }
 
-    private void createCustomModelJson(File buildFolder, String modelName, String texturePath) throws IOException {
-        // 커스텀 모델 JSON 파일 생성 로직
+    private void createCustomModelJson(File outputFile, String texturePath) throws IOException {
+        JsonObject modelObject = new JsonObject();
+        modelObject.addProperty("parent", "item/generated");
+        JsonObject textures = new JsonObject();
+        textures.addProperty("layer0", texturePath);
+        modelObject.add("textures", textures);
+
+        try (Writer writer = new OutputStreamWriter(new FileOutputStream(outputFile), StandardCharsets.UTF_8)) {
+            GSON.toJson(modelObject, writer);
+        }
     }
 
-    private void createVanillaModelOverrideJson(File buildFolder, String vanillaItemName, List<Object> overrides) throws IOException {
-        // 바닐라 아이템 모델 오버라이드 JSON 생성 로직
+    private void createMaterialSelectModelJson(File outputFile, Material baseMaterial, List<CustomItemData> customItemsForMaterial) throws IOException {
+        JsonObject root = new JsonObject();
+        JsonObject model = new JsonObject();
+        model.addProperty("type", "select");
+        model.addProperty("property", "custom_model_data");
+
+        JsonObject fallback = new JsonObject();
+        fallback.addProperty("type", "model");
+        fallback.addProperty("model", "item/" + baseMaterial.name().toLowerCase());
+        model.add("fallback", fallback);
+
+        JsonArray cases = new JsonArray();
+        for (CustomItemData itemData : customItemsForMaterial) {
+            JsonObject caseEntry = new JsonObject();
+            caseEntry.addProperty("when", itemData.getId());
+            JsonObject caseModel = new JsonObject();
+            caseModel.addProperty("type", "model");
+            caseModel.addProperty("model", "item/" + itemData.getId().toLowerCase());
+            caseEntry.add("model", caseModel);
+            cases.add(caseEntry);
+        }
+
+        model.add("cases", cases);
+        root.add("model", model);
+
+        try (Writer writer = new OutputStreamWriter(new FileOutputStream(outputFile), StandardCharsets.UTF_8)) {
+            GSON.toJson(root, writer);
+        }
     }
 
     private void zipFolder(File sourceFolder, File outputZipFile) throws IOException {
-        // 폴더를 ZIP 파일로 압축하는 로직
+        try (FileOutputStream fos = new FileOutputStream(outputZipFile);
+             ZipOutputStream zos = new ZipOutputStream(fos)) {
+
+            Path sourcePath = sourceFolder.toPath();
+            Files.walk(sourcePath)
+                    .filter(path -> !Files.isDirectory(path))
+                    .forEach(path -> {
+                        ZipEntry zipEntry = new ZipEntry(sourcePath.relativize(path).toString().replace("\\", "/"));
+                        try {
+                            zos.putNextEntry(zipEntry);
+                            Files.copy(path, zos);
+                            zos.closeEntry();
+                        } catch (IOException e) {
+                            plugin.getLogger().severe("ZIP 압축 중 오류 발생! " + path + " - " + e.getMessage());
+                        }
+                    });
+        }
     }
 
-    private String calculateSha1(File file) throws IOException, NoSuchAlgorithmException {
-        // SHA1 해시 계산 로직
-        return ""; // 실제 해시 값 반환
+    public String calculateSha1(File file) throws IOException, NoSuchAlgorithmException {
+        MessageDigest md = MessageDigest.getInstance("SHA-1");
+        try (FileInputStream fis = new FileInputStream(file);
+             DigestInputStream dis = new DigestInputStream(fis, md)) {
+            byte[] buffer = new byte[8192];
+            while (dis.read(buffer) != -1) {
+
+            }
+        }
+        byte[] hashBytes = md.digest();
+        StringBuilder sb = new StringBuilder();
+        for (byte b : hashBytes) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
     }
 }

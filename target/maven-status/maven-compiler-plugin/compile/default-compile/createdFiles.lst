@@ -1,5 +1,6 @@
 dev\o8o1o5\craftedGear\items\CustomItemData.class
 dev\o8o1o5\craftedGear\listeners\ResourcePackListener.class
+dev\o8o1o5\craftedGear\managers\ItemManager.class
 dev\o8o1o5\craftedGear\commands\CraftedGearCommand.class
 dev\o8o1o5\craftedGear\CraftedGear.class
-dev\o8o1o5\craftedGear\manager\ItemManager.class
+dev\o8o1o5\craftedGear\generators\ResourcePackGenerator.class
