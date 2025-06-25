@@ -7,10 +7,7 @@ import org.bukkit.Material; // Bukkit Material 임포트
 import org.bukkit.configuration.file.YamlConfiguration; // YAML 파일 파싱을 위해
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set; // keySet() 사용을 위해
+import java.util.*;
 import java.util.logging.Level;
 
 // 아이템 스택 생성을 위한 추가 임포트
@@ -121,6 +118,10 @@ public class ItemManager {
      */
     public Set<String> getIds() {
         return loadedItems.keySet();
+    }
+
+    public Collection<CustomItemData> getCustomDatas() {
+        return loadedItems.values();
     }
 
     /**
